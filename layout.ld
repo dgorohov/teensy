@@ -1,34 +1,82 @@
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 256K
-    RAM  (rwx) : ORIGIN = 0x1FFF8000, LENGTH = 64K
+	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 1024K
+	RAM  (rwx) : ORIGIN = 0x1FFF0000, LENGTH = 256K
 }
+
 
 SECTIONS
 {
-    .text : {
-        . = 0;
-        KEEP(*(.vectors))
-        . = 0x400;
-        KEEP(*(.flashconfig*))
-        . = ALIGN(4);
-        *(.text*)
-    } > FLASH = 0xFF
+	.text : {
+		. = 0;
+		KEEP(*(.vectors))
+		*(.startup*)
+		/* TODO: does linker detect startup overflow onto flashconfig? */
+		. = 0x400;
+		KEEP(*(.flashconfig*))
+		*(.text*)
+		*(.rodata*)
+		. = ALIGN(4);
+		KEEP(*(.init))
+		. = ALIGN(4);
+		__preinit_array_start = .;
+		KEEP (*(.preinit_array))
+		__preinit_array_end = .;
+		__init_array_start = .;
+		KEEP (*(SORT(.init_array.*)))
+		KEEP (*(.init_array))
+		__init_array_end = .;
+	} > FLASH = 0xFF
 
-    .rodata : {
-        *(.rodata*)
-    } > FLASH
+	.ARM.exidx : {
+		__exidx_start = .;
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+		__exidx_end = .;
+	} > FLASH
+	_etext = .;
 
-    .bss : {
-         . = ORIGIN(RAM);
-         _bss_start = .;
-         *(.bss*)
-         _bss_end = .;
-    } > RAM
+	.usbdescriptortable (NOLOAD) : {
+		/* . = ORIGIN(RAM); */
+		. = ALIGN(512);
+		*(.usbdescriptortable*)
+	} > RAM
 
-    _stack_top = ORIGIN(RAM) + LENGTH(RAM);
+	.dmabuffers (NOLOAD) : {
+		. = ALIGN(4);
+		*(.dmabuffers*)
+	} > RAM
 
-    /DISCARD/ : {
-        *(.ARM.*)
-    }
+	.usbbuffers (NOLOAD) : {
+		. = ALIGN(4);
+		*(.usbbuffers*)
+	} > RAM
+
+	.data : AT (_etext) {
+		. = ALIGN(4);
+		_sdata = .;
+		*(.fastrun*)
+		*(.data*)
+		. = ALIGN(4);
+		_edata = .;
+	} > RAM
+
+	.noinit (NOLOAD) : {
+		*(.noinit*)
+	} > RAM
+
+	.bss : {
+		. = ALIGN(4);
+		_sbss = .;
+		__bss_start__ = .;
+		*(.bss*)
+		*(COMMON)
+		. = ALIGN(4);
+		_ebss = .;
+		__bss_end__ = .;
+	} > RAM
+
+	__stack_top = ORIGIN(RAM) + LENGTH(RAM);
 }
+
+
+

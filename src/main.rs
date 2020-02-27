@@ -27,7 +27,6 @@ use uart::*;
 use watchdog::*;
 
 use core::slice;
-use core::fmt::Write;
 use volatile::Volatile;
 
 static mut PORT: Option<Port> = None;
@@ -79,18 +78,21 @@ extern fn main() {
     gpio.output();
     gpio.high();
 
-    loop {};
+    loop {
+        gpio.low();
+        gpio.high();
+    };
 }
 
 extern {
-    fn _stack_top();
-    static mut _bss_start: u8;
-    static mut _bss_end: u8;
+    fn __stack_top();
+    static mut __bss_start__: u8;
+    static mut __bss_end__: u8;
 }
 
 unsafe fn setup_bss() {
-    let bss_start = &mut _bss_start as *mut u8;
-    let bss_end = &mut _bss_end as *mut u8;
+    let bss_start = &mut __bss_start__ as *mut u8;
+    let bss_end = &mut __bss_end__ as *mut u8;
     let bss_len = bss_end as usize - bss_start as usize;
     let bss = slice::from_raw_parts_mut(bss_start, bss_len);
     for b in &mut bss.iter_mut() {
@@ -101,7 +103,7 @@ unsafe fn setup_bss() {
 #[link_section = ".vectors"]
 #[no_mangle]
 pub static _VECTORS: [unsafe extern fn(); 2] = [
-    _stack_top,
+    __stack_top,
     main,
 ];
 
@@ -118,7 +120,6 @@ pub static _FLASHCONFIG: [u8; 16] = [
 #[panic_handler]
 fn teensy_panic(pi: &core::panic::PanicInfo) -> ! {
     if let Some(uart) = unsafe { WRITER.as_mut() } {
-        write!(uart, "Panic occured! ");
         if let Some(format_args) = pi.message() {
             core::fmt::write(uart, *format_args).unwrap();
         }

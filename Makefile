@@ -12,6 +12,11 @@ $(ELF):
 $(HEX): $(ELF)
 	arm-none-eabi-objcopy -O ihex $(ELF) $(HEX)
 
+hex: $(HEX)
+
 .PHONY: flash
-flash: $(HEX)
-	teensy_loader_cli -w -mmcu=mk20dx256 $(HEX) -v
+flash: hex
+	teensy_loader_cli -w -s -mmcu=mk66fx1m0 $(HEX) -v
+
+bloat:
+	cargo bloat $(BLOAT_ARGS) -n 50 --target thumbv7em-none-eabi

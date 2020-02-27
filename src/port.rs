@@ -171,6 +171,12 @@ impl <'a> Gpio<'a>  {
             (*self.gpio).psor[self.pin.pin].write(1);
         }
     }
+
+    pub fn low(&mut self) {
+        unsafe {
+            (*self.gpio).psor[self.pin.pin].write(0);
+        }
+    }
 }
 
 impl <'a> Rx<'a> {

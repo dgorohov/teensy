@@ -1,11 +1,11 @@
 use volatile::Volatile;
 use bit_field::BitField;
 
-use core::sync::atomic::{AtomicBool,ATOMIC_BOOL_INIT,Ordering};
+use core::sync::atomic::{AtomicBool, Ordering};
 
-use super::{Port,PortName,Rx,Tx,Uart};
+use super::{Port, PortName, Rx, Tx, Uart};
 
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct SimRegs {
     sopt1: Volatile<u32>,
     sopt1_cfg: Volatile<u32>,
@@ -30,7 +30,7 @@ struct SimRegs {
     uidh: Volatile<u32>,
     uidmh: Volatile<u32>,
     uidml: Volatile<u32>,
-    uidl: Volatile<u32>
+    uidl: Volatile<u32>,
 }
 
 pub struct Sim {
@@ -41,7 +41,7 @@ pub struct ClockGate {
     gate: &'static mut Volatile<u32>
 }
 
-static SIM_INIT: AtomicBool = ATOMIC_BOOL_INIT;
+static SIM_INIT: AtomicBool = AtomicBool::new(false);
 
 impl Sim {
     pub fn new() -> Sim {
@@ -52,7 +52,7 @@ impl Sim {
         let reg = unsafe {
             &mut *(0x40047000 as *mut SimRegs)
         };
-        Sim {reg}
+        Sim { reg }
     }
 
     pub fn port(&mut self, port: PortName) -> Port {
@@ -85,9 +85,9 @@ impl Sim {
 
     pub fn set_dividers(&mut self, core: u32, bus: u32, flash: u32) {
         let mut clkdiv: u32 = 0;
-        clkdiv.set_bits(28..32, core-1);
-        clkdiv.set_bits(24..28, bus-1);
-        clkdiv.set_bits(16..20, flash-1);
+        clkdiv.set_bits(28..32, core - 1);
+        clkdiv.set_bits(24..28, bus - 1);
+        clkdiv.set_bits(16..20, flash - 1);
         unsafe {
             self.reg.clkdiv1.write(clkdiv);
         }

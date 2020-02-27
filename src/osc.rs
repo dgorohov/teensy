@@ -1,9 +1,9 @@
 use volatile::Volatile;
 use bit_field::BitField;
 
-use core::sync::atomic::{AtomicBool,ATOMIC_BOOL_INIT,Ordering};
+use core::sync::atomic::{AtomicBool, Ordering};
 
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct OscRegs {
     cr: Volatile<u8>
 }
@@ -16,7 +16,7 @@ pub struct OscToken {
     _private: ()
 }
 
-static OSC_INIT: AtomicBool = ATOMIC_BOOL_INIT;
+static OSC_INIT: AtomicBool = AtomicBool::new(false);
 
 impl Osc {
     pub fn new() -> Osc {
@@ -25,7 +25,7 @@ impl Osc {
             panic!("Cannot initialize OSC: It's already active");
         }
         let reg = unsafe { &mut *(0x40065000 as *mut OscRegs) };
-        Osc {reg}
+        Osc { reg }
     }
 
     pub fn enable(&mut self, capacitance: u8) -> OscToken {

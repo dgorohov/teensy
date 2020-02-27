@@ -4,9 +4,9 @@ use bit_field::BitField;
 
 use super::OscToken;
 
-use core::sync::atomic::{AtomicBool,ATOMIC_BOOL_INIT,Ordering};
+use core::sync::atomic::{AtomicBool, Ordering};
 
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct McgRegs {
     c1: Volatile<u8>,
     c2: Volatile<u8>,
@@ -43,10 +43,10 @@ pub struct Pbe {
 pub enum Clock {
     Fei(Fei),
     Fbe(Fbe),
-    Pbe(Pbe)
+    Pbe(Pbe),
 }
 
-static MCG_INIT: AtomicBool = ATOMIC_BOOL_INIT;
+static MCG_INIT: AtomicBool = AtomicBool::new(false);
 
 impl Mcg {
     pub fn new() -> Mcg {
@@ -55,7 +55,7 @@ impl Mcg {
             panic!("Cannot initialize MCG: It's already active");
         }
         let reg = unsafe { &mut *(0x40064000 as *mut McgRegs) };
-        Mcg {reg}
+        Mcg { reg }
     }
 
     pub fn clock(self) -> Clock {
@@ -66,9 +66,9 @@ impl Mcg {
         let pll_enabled = self.reg.c6.read().get_bit(6);
 
         match (fll_internal, pll_enabled, source) {
-            (true, false, OscSource::LockedLoop) => Clock::Fei(Fei{ mcg: self }),
-            (false, false, OscSource::External) => Clock::Fbe(Fbe{ mcg: self }),
-            (_, true, OscSource::External) => Clock::Pbe(Pbe{ mcg: self }),
+            (true, false, OscSource::LockedLoop) => Clock::Fei(Fei { mcg: self }),
+            (false, false, OscSource::External) => Clock::Fbe(Fbe { mcg: self }),
+            (_, true, OscSource::External) => Clock::Pbe(Pbe { mcg: self }),
             _ => panic!("The current clock mode cannot be represented as a known struct")
         }
     }
@@ -84,14 +84,14 @@ impl Drop for Mcg {
 pub enum OscRange {
     Low = 0,
     High = 1,
-    VeryHigh = 2
+    VeryHigh = 2,
 }
 
 #[allow(dead_code)]
 enum OscSource {
     LockedLoop = 0,
     Internal = 1,
-    External = 2
+    External = 2,
 }
 
 impl Fei {
